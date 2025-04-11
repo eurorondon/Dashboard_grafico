@@ -46,17 +46,39 @@ const Product = (props) => {
         <div style={{ width: "100%", height: "auto", position: "relative" }}>
           <Link href={`/product/${id}/edit`}>
             {url ? (
-              <Image
-                src={url}
-                alt="Product"
-                width={180} // Anchura específica de la imagen
-                height={180} // Altura específica de la imagen
-                layout="responsive" // Establecer diseño responsivo
-                objectFit="scale-down" // Ajustar el contenido de la imagen al contenedor
-                placeholder="blur"
-                blurDataURL="/images/loadingImages.png"
-                loading="lazy"
-              />
+              // <Image
+              //   src={url}
+              //   alt="Product"
+              //   width={180} // Anchura específica de la imagen
+              //   height={180} // Altura específica de la imagen
+              //   layout="responsive" // Establecer diseño responsivo
+              //   objectFit="scale-down" // Ajustar el contenido de la imagen al contenedor
+              //   placeholder="blur"
+              //   blurDataURL="/images/loadingImages.png"
+              //   loading="lazy"
+              // />
+              <div
+                style={{
+                  width: "100%",
+                  height: "180px",
+                  position: "relative",
+                  borderTopLeftRadius: "5px",
+                  borderTopRightRadius: "5px",
+                  overflow: "hidden", // Muy importante para que el border-radius funcione
+                }}
+              >
+                <Image
+                  src={url}
+                  alt="Product"
+                  fill // Hace que la imagen llene el contenedor
+                  style={{
+                    objectFit: "cover", // Igual que en tu ejemplo original
+                  }}
+                  placeholder="blur"
+                  blurDataURL="/images/loadingImages.png"
+                  loading="lazy"
+                />
+              </div>
             ) : (
               <Image
                 src={

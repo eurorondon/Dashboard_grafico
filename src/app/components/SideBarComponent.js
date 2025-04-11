@@ -27,16 +27,16 @@ function SideBarComponent({ toggleMenu }) {
             icon={HiChartPie}
             onClick={toggleMenu}
           >
-            Productos
+            Inicio
           </Sidebar.Item>
-          {/* <Sidebar.Item
+          <Sidebar.Item
             as={Link}
             href="/productos"
             icon={HiShoppingBag}
             onClick={toggleMenu}
           >
             Productos
-          </Sidebar.Item> */}
+          </Sidebar.Item>
           <Sidebar.Item
             as={Link}
             href="/borradores"
@@ -44,6 +44,14 @@ function SideBarComponent({ toggleMenu }) {
             onClick={toggleMenu}
           >
             Borradores
+          </Sidebar.Item>
+          <Sidebar.Item
+            as={Link}
+            href="/ordenes"
+            icon={HiShoppingBag}
+            onClick={toggleMenu}
+          >
+            Ordenes
           </Sidebar.Item>
           <Sidebar.Item
             as={Link}

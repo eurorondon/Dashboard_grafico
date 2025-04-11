@@ -1,6 +1,7 @@
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/api";
 import amplifyconfig from "../aws-exports";
+import { useParams } from "next/navigation";
 import {
   listProducts,
   getProduct,
@@ -8,6 +9,8 @@ import {
   getCategories,
   ProductsByDate,
   listSettings,
+  listOrders,
+  getOrder,
 } from "@/graphql/queries";
 import {
   createCategories,
@@ -182,4 +185,22 @@ export async function getAllSettings() {
   });
 
   return res.data.listSettings.items;
+}
+
+export async function getAllOrders() {
+  const res = await client.graphql({
+    query: listOrders,
+    variables: {},
+  });
+
+  return res.data.listOrders.items;
+}
+
+export async function getOrderDetail(id) {
+  const res = await client.graphql({
+    query: getOrder,
+    variables: { id },
+  });
+
+  return res.data.getOrder;
 }

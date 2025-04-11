@@ -23,7 +23,7 @@ const SidebarUi = () => {
 
   return (
     <>
-      <div className=" fixed  text-white h-screen w-72   ">
+      <div className=" fixed   text-white h-screen w-72  ">
         <SideBarComponent toggleMenu={toggleMenu} />
       </div>
     </>
