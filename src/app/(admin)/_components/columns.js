@@ -31,12 +31,33 @@ export const columns = [
   {
     accessorKey: "isPaid",
     header: "Pagado",
+    cell: ({ row }) => {
+      const isPaid = row.original.isPaid;
+
+      return isPaid ? (
+        <span className="text-green-600 font-semibold">Pagado</span>
+      ) : (
+        <button className="bg-red-100 text-red-500 px-2 py-1 rounded font-semibold">
+          No pagado
+        </button>
+      );
+    },
   },
   {
     accessorKey: "isDelivered",
     header: "Status",
-  },
+    cell: ({ row }) => {
+      const isDelivered = row.original.isDelivered;
 
+      return isDelivered ? (
+        <span className="text-green-600 font-semibold">Entregado</span>
+      ) : (
+        <button className="bg-black text-white px-2 py-1 rounded">
+          No entregado
+        </button>
+      );
+    },
+  },
   {
     header: "Usuario",
     accessorFn: (row) => row.user?.name ?? "Sin nombre",

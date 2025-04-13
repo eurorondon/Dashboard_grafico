@@ -181,6 +181,7 @@ function Productos() {
                     name={product.name}
                     description={product.description}
                     price={product.price}
+                    mayor={product.priceMayor}
                     offer={product.inOffer}
                     discountPercentage={product.discountPercentage}
                     photo={product.photo}

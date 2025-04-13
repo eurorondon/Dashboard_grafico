@@ -4,7 +4,7 @@ import Link from "next/link";
 import { MdDelete, MdEdit } from "react-icons/md";
 
 const Product = (props) => {
-  const { product, url, handleDelete, id, photo, name } = props;
+  const { product, mayor, url, handleDelete, id, photo, name } = props;
 
   const capitalizeFirstLetter = (str) => {
     if (str.length === 0) return str;
@@ -80,18 +80,29 @@ const Product = (props) => {
                 />
               </div>
             ) : (
-              <Image
-                src={
-                  "https://img.freepik.com/vector-premium/vector-icono-imagen-predeterminado-pagina-imagen-faltante-diseno-sitio-web-o-aplicacion-movil-no-hay-foto-disponible_87543-11093.jpg"
-                }
-                alt="Product"
-                width={180} // Anchura específica de la imagen
-                height={180} // Altura específica de la imagen
-                layout="responsive" // Establecer diseño responsivo
-                objectFit="scale-down" // Ajustar el contenido de la imagen al contenedor
-                placeholder="blur"
-                blurDataURL="/images/loadingImages.png"
-              />
+              <div
+                style={{
+                  width: "100%",
+                  height: "180px",
+                  position: "relative",
+                  borderTopLeftRadius: "5px",
+                  borderTopRightRadius: "5px",
+                  overflow: "hidden", // Muy importante para que el border-radius funcione
+                }}
+              >
+                <Image
+                  src={
+                    "https://img.freepik.com/vector-premium/vector-icono-imagen-predeterminado-pagina-imagen-faltante-diseno-sitio-web-o-aplicacion-movil-no-hay-foto-disponible_87543-11093.jpg"
+                  }
+                  alt="Product"
+                  width={180} // Anchura específica de la imagen
+                  height={180} // Altura específica de la imagen
+                  layout="responsive" // Establecer diseño responsivo
+                  objectFit="scale-down" // Ajustar el contenido de la imagen al contenedor
+                  placeholder="blur"
+                  blurDataURL="/images/loadingImages.png"
+                />
+              </div>
             )}
           </Link>
           <div className="p-2" style={{ backgroundColor: "" }}>
@@ -120,30 +131,49 @@ const Product = (props) => {
             </div>
 
             {props.offer ? (
-              <div className="price d-flex gap-4 " style={{}}>
-                <p style={{ color: "#3b83bd", fontWeight: "bold" }}>
-                  {props.price - props.price * (props.discountPercentage / 100)}{" "}
-                  USD{" "}
-                </p>
-                <p
-                  style={{
-                    textDecoration: "line-through",
-                    fontSize: "16px",
-                    color: "gray",
-                  }}
-                >
-                  {" "}
-                  {props.price} USD
-                </p>
+              <div className=" flex flex-row gap-1  " style={{}}>
+                <p>Precio:</p>
+                <div className="">
+                  <p style={{ color: "#3b83bd", fontWeight: "bold" }}>
+                    {props.price -
+                      props.price * (props.discountPercentage / 100)}{" "}
+                    USD{" "}
+                  </p>
+                </div>
+
+                <div className="">
+                  <p
+                    style={{
+                      textDecoration: "line-through",
+                      fontSize: "16px",
+                      color: "gray",
+                    }}
+                  >
+                    {" "}
+                    {props.price} USD
+                  </p>
+                </div>
               </div>
             ) : (
+              <div className="flex">
+                <div>Precio:</div>
+                <p
+                  className="price"
+                  style={{ color: "#3b83bd", fontWeight: "bold" }}
+                >
+                  {props.price} $
+                </p>
+              </div>
+            )}
+            <div className="flex">
+              <div>Mayor:</div>
               <p
                 className="price"
                 style={{ color: "#3b83bd", fontWeight: "bold" }}
               >
-                {props.price} $
+                {props.mayor} $
               </p>
-            )}
+            </div>
             <div className="absolute top-2 right-3 flex justify-end ">
               <Link
                 href={`/product/${id}/edit`}

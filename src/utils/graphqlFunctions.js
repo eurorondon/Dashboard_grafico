@@ -18,6 +18,7 @@ import {
   createSettings,
   deleteCategories,
   deleteProduct,
+  updateOrder,
 } from "@/graphql/mutations";
 
 Amplify.configure(amplifyconfig);
@@ -203,4 +204,36 @@ export async function getOrderDetail(id) {
   });
 
   return res.data.getOrder;
+}
+
+export async function updateSingleOrder({
+  id,
+  isPaid,
+  paidAt,
+  isDelivered,
+  deliveredAt,
+}) {
+  try {
+    const input = { id, isPaid, paidAt, isDelivered, deliveredAt };
+
+    console.log("Enviando datos a updateOrder:", input);
+
+    const result = await client.graphql({
+      query: updateOrder,
+      variables: { input },
+    });
+
+    console.log("Respuesta del servidor:", result);
+    return result;
+  } catch (error) {
+    console.error("Error al actualizar la orden:", error);
+
+    const errorMessage =
+      error?.errors?.[0]?.message ||
+      error?.message ||
+      "Ocurrió un error desconocido.";
+
+    alert("Error al actualizar: " + errorMessage);
+    throw error;
+  }
 }

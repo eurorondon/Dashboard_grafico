@@ -1,20 +1,78 @@
 "use client";
 
-import { getOrderDetail } from "@/utils/graphqlFunctions";
+import { getOrderDetail, updateSingleOrder } from "@/utils/graphqlFunctions";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import React from "react";
 import { Button } from "@/components/ui/button"; // Asegúrate de tener este componente
-import { Eye } from "lucide-react"; // Si quieres usar el ícono del ojo
+import { CreditCard, Eye, Truck, User } from "lucide-react"; // Si quieres usar el ícono del ojo
 import Loader from "../../../components/Loader";
 
+const formatDate = (rawDate) => {
+  const date = new Date(rawDate);
+
+  // Formateamos la fecha (sin hora)
+  const datePart = new Intl.DateTimeFormat("es-VE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+
+  // Formateamos la hora
+  const timePart = new Intl.DateTimeFormat("es-VE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false, // Si prefieres 24 horas
+  }).format(date);
+
+  // Concatenamos fecha y hora sin la coma
+  return `${datePart} ${timePart}`;
+};
+
 const OrderDetailsPage = () => {
+  const [loading, setLoading] = React.useState(false);
+  const [loadingDelivered, setLoadingDelivered] = React.useState(false);
   const { id } = useParams(); // Obtenemos el ID de la URL
   const { data, isLoading, error } = useQuery({
     queryKey: ["OrderDetail", id],
     queryFn: () => getOrderDetail(id), // Llamamos la función para obtener los detalles
     enabled: !!id, // Solo ejecuta la consulta si tenemos un id
   });
+
+  const handleMarkAsPaid = async () => {
+    setLoading(true);
+    try {
+      await updateSingleOrder({
+        id: order?.id,
+        isPaid: true,
+        paidAt: new Date().toISOString(),
+      });
+      // alert("¡Pagado!");
+      window.location.reload(); // O refetch()
+    } catch (error) {
+      console.log("Error");
+      // Ya hay alerta detallada en updateSingleOrder
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAsDelivered = async () => {
+    setLoading(true);
+    try {
+      await updateSingleOrder({
+        id: order?.id,
+        isDelivered: true,
+        deliveredAt: new Date().toISOString(),
+      });
+      // alert("¡Entregado!");
+      window.location.reload(); // O refetch()
+    } catch (error) {
+      // Ya hay alerta detallada en updateSingleOrder
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Si los datos están cargando, mostramos un loader
   if (isLoading) {
@@ -30,20 +88,94 @@ const OrderDetailsPage = () => {
   const order = data; // Suponemos que data es el objeto con los detalles de la orden
 
   return (
-    <div className="container mx-auto p-4">
+    <div
+      className={
+        order.isPaid
+          ? "container mx-auto p-4 bg-green-100 rounded-md"
+          : "container mx-auto p-4 bg-red-100 rounded-md"
+      }
+    >
       <h1 className="text-2xl font-semibold mb-4">Detalles de la Orden</h1>
       <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Información del Usuario</h2>
-        <div className="mb-6">
-          <p>
-            <strong>Nombre:</strong> {order?.user?.name}
-          </p>
-          <p>
-            <strong>Correo:</strong> {order?.user?.email}
-          </p>
-          <p>
-            <strong>Teléfono:</strong> {order?.user?.phoneNumber}
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
+          {/* Tarjeta: Información del Usuario */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-red-600">
+              <span className="bg-red-100 p-2 rounded-full">
+                <User size={20} />
+              </span>
+              Información del Usuario
+            </h2>
+            <p>
+              <strong>Nombre:</strong> {order?.user?.name}
+            </p>
+            <p>
+              <strong>Correo:</strong> {order?.user?.email}
+            </p>
+            <p>
+              <strong>Teléfono:</strong> {order?.user?.phoneNumber}
+            </p>
+          </div>
+
+          {/* Tarjeta: Dirección de Envío */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-600">
+              <span className="bg-blue-100 p-2 rounded-full">
+                <Truck size={20} />
+              </span>
+              Dirección de Envío
+            </h2>
+            <p>
+              <strong>Dirección:</strong>{" "}
+              {order?.shippingAddress?.address || "No especificada"}
+            </p>
+            <p>
+              <strong>Ciudad:</strong>{" "}
+              {order?.shippingAddress?.city || "No especificada"}
+            </p>
+            <p>
+              <strong>Código Postal:</strong>{" "}
+              {order?.shippingAddress?.postalCode || "No especificado"}
+            </p>
+          </div>
+
+          {/* Tarjeta: Acciones */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-green-600">
+              <span className="bg-green-100 p-2 rounded-full">
+                <CreditCard size={20} />
+              </span>
+              Acciones
+            </h2>
+            <div className="flex flex-col gap-3 w-full">
+              {order?.isPaid ? (
+                <button className="w-full bg-green-500 text-white px-2 py-1 rounded">
+                  Pagado {formatDate(order.paidAt)}
+                </button>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={handleMarkAsPaid}
+                  disabled={loadingDelivered}
+                >
+                  {loadingDelivered ? "Actualizando..." : "Marcar Pagado"}
+                </Button>
+              )}
+              {order?.isDelivered ? (
+                <button className="w-full bg-green-500 text-white px-2 py-1 rounded">
+                  Entregado {formatDate(order.deliveredAt)}
+                </button>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={handleMarkAsDelivered}
+                  disabled={loadingDelivered}
+                >
+                  {loadingDelivered ? "Actualizando..." : "Marcar Entregado"}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         <h2 className="text-xl font-semibold mb-4">Productos de la Orden</h2>
@@ -82,7 +214,13 @@ const OrderDetailsPage = () => {
           </p>
           <p>
             <strong>Estado del Pago:</strong>{" "}
-            {order?.isPaid ? "Pagado" : "No Pagado"}
+            {order?.isPaid ? (
+              <button className="text-green-600 font-semibold">Pagado</button>
+            ) : (
+              <button className="bg-red-100 text-red-500 px-2 py-1 rounded ">
+                No pagado
+              </button>
+            )}
           </p>
           <p>
             <strong>Fecha de Creación:</strong>{" "}

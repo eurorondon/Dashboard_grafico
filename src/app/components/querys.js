@@ -45,76 +45,82 @@ export const handleSubmit = async (file) => {
 };
 
 export const handleUpdate = async (
-  status,
+  productId,
   name,
+  category,
   price,
   priceMayor,
+  status,
   countInStock,
-  category,
   description,
   toggle,
   discountPercentage,
   bestSellers,
   file,
   imageUrl,
-  productId,
   queryClient,
   inputFileRef,
   // setIsLoading,
   setFile
 ) => {
-  console.log(status);
   // setIsLoading(true);
-  let photo = imageUrl;
+  // let photo = imageUrl;
+  let photo = Array.isArray(imageUrl) ? [...imageUrl] : [];
+  console.log("photo desde client", photo);
+  console.log("Image desde client", imageUrl);
 
   if (file) {
-    if (file.length > 0) {
-      for (let i = 0; i < file.length; i++) {
-        const formData = new FormData();
-        formData.append("file", file[i]);
+    if (file && file.length > 0) {
+      console.log("ENTRAMOS CON FOTO PAPA ");
 
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await response.json();
+      try {
+        for (let i = 0; i < file.length; i++) {
+          const formData = new FormData();
+          formData.append("file", file[i]);
 
-        photo.push({
-          url: data.data.url, // Suponiendo que la URL de la imagen está en la propiedad 'url' de la respuesta
-          publicId: data.data.public_id, // Suponiendo que el publicId está en la propiedad 'public_id' de la respuesta
-        });
-      }
-    }
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
 
-    try {
-      const result = await client.graphql({
-        query: updateProduct,
-        variables: {
-          input: {
-            id: productId,
-            name,
-            categories: category,
-            price,
-            priceMayor,
-            description,
-            countInStock,
-            inOffer: toggle,
-            discountPercentage,
-            bestSellers,
-            // photo: imageUrl,
-            photo,
-            status,
+          const data = await response.json();
+          console.log("this is new photo", data);
+
+          photo.push({
+            url: data.data.url,
+            publicId: data.data.publicId, // OJO: aquí usas 'public_id' en el comentario pero en el backend devuelves 'publicId'
+          });
+        }
+
+        console.log("entramos en el sgudno bloque");
+
+        const result = await client.graphql({
+          query: updateProduct,
+          variables: {
+            input: {
+              id: productId,
+              name,
+              photo,
+              bestSellers,
+
+              // otros campos
+            },
           },
-        },
-      });
+        });
 
-      queryClient.invalidateQueries(["GetProduct"]);
-      setFile(null);
-      inputFileRef.current.value = "";
-      // Router.push("/productos");
-    } catch (error) {
-      console.log(error);
+        queryClient.invalidateQueries(["GetProduct"]);
+        setFile(null);
+        inputFileRef.current.value = "";
+      } catch (error) {
+        console.log("ERROR EN EL SEGUNDO BLOQUE", error);
+      }
+
+      console.log("fotoooooooooooooo yeah", photo);
+    } else {
+      console.log("NO EXISTE FILE O ESTÁ VACÍO");
     }
+
+    console.log("fotoooooooooooooo yeah", photo);
   }
   try {
     const result = await client.graphql({
@@ -128,10 +134,10 @@ export const handleUpdate = async (
           priceMayor,
           description,
           countInStock,
+          status,
           inOffer: toggle,
           discountPercentage,
           bestSellers,
-          status,
         },
       },
     });

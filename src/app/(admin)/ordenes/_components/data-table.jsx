@@ -73,7 +73,7 @@ export function DataTable({ columns, data }) {
             className="block text-sm font-bold text-gray-700 mb-1"
             htmlFor="email-filter"
           >
-            Nombre
+            Usuario
           </label>
           <Input
             placeholder="Nombre..."

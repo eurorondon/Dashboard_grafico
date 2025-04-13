@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,12 +10,26 @@ import {
 } from "@/utils/graphqlFunctions";
 import SwitchOffer from "./SwitchOffer";
 import SwitchSellers from "./SwitchOffer";
-import { handleDeleteImage, handleSubmit, handleUpdate } from "./querys";
+import {
+  handleDeleteImage,
+  handleSubmit,
+  handleUpdate,
+} from "../components/querys";
 
 import { ToastContainer, toast } from "react-toastify";
 import { Spinner } from "flowbite-react";
 
-const statusList = ["Disponible", "Borrador"];
+export const capitalizeFirstLetter = (str) => {
+  if (str.length === 0) return str;
+  const res = str.charAt(0).toUpperCase() + str.slice(1);
+  console.log(res);
+  return res;
+};
+
+export const toLowerCase = (str) => {
+  return str.toLowerCase();
+};
+
 function UpdateProduct({ hasEdit, productId }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -23,53 +37,84 @@ function UpdateProduct({ hasEdit, productId }) {
   const [priceMayor, setPriceMayor] = useState(0);
   const [category, setCategory] = useState("");
   const [countInStock, setCountInStock] = useState(5);
-  const [description, setDescription] = useState("");
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
   const [publicIdCloudinary, setPublicIdCloudinary] = useState(null);
   const [toggle, setToggle] = useState(false);
-  const [discountPercentage, setDiscountPercentage] = useState(10);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
   const [bestSellers, setBestSellers] = useState(false);
+  const [description, setDescription] = useState("");
   const [descripcion, setDescripcion] = useState(false);
   const inputFileRef = React.useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [photoArray, setPhotoArray] = useState(null);
-  const [status, setStatus] = useState("");
+  const [Status, setStatus] = useState(null);
 
   const queryClient = useQueryClient();
 
-  const capitalizeFirstLetter = (str) => {
-    if (str.length === 0) return str;
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
+  console.log("this is DESCRIPCION", descripcion);
+  console.log("this is description", description);
 
   // get product
-  const { data } = useQuery({
+  const { data, status } = useQuery({
     queryKey: ["GetProduct", productId],
     queryFn: () => productDetails(productId),
     enabled: !!productId,
     onSuccess: (data) => {
-      setName(data.name);
-      setCategory(data.categories ? data?.categories[0] : "");
+      setName(capitalizeFirstLetter(data.name));
+      setCategory(
+        Array.isArray(data.categories) && data.categories.length > 0
+          ? data.categories[0]
+          : ""
+      );
       setPrice(data.price);
-      setPriceMayor(data.priceMayor);
       setDescription(data.description);
 
-      const photosInicio = data.photo.map((item) => ({
+      const photosInicio = (data.photo || []).map((item) => ({
         url: item.url,
         publicId: item.publicId,
       }));
       setImageUrl(photosInicio);
-      setPublicIdCloudinary(data?.photo[0]?.publicId);
+      setPublicIdCloudinary(data?.photo?.[0]?.publicId || "");
       setCountInStock(data.countInStock);
-      setToggle(data.inOffer);
+      setToggle(!!data.inOffer);
       setDiscountPercentage(data.discountPercentage);
       setBestSellers(data.bestSellers);
       setStatus(data.status);
     },
   });
 
-  const nameCapital = capitalizeFirstLetter(name);
+  useEffect(() => {
+    if (!data) return;
+
+    setName(capitalizeFirstLetter(data.name));
+    setCategory(
+      Array.isArray(data.categories) && data.categories.length > 0
+        ? data.categories[0]
+        : ""
+    );
+    setPrice(data.price);
+    setPriceMayor(data.priceMayor);
+    setDescription(data.description);
+
+    const photosInicio = (data.photo || []).map((item) => ({
+      url: item.url,
+      publicId: item.publicId,
+    }));
+    setImageUrl(photosInicio);
+    setPublicIdCloudinary(data?.photo?.[0]?.publicId || "");
+    setCountInStock(data.countInStock);
+    setToggle(!!data.inOffer);
+    setDiscountPercentage(data.discountPercentage);
+    setBestSellers(data.bestSellers);
+    setStatus(data.status);
+  }, [data]);
+
+  useEffect(() => {
+    if (data?.description) {
+      setDescripcion(true);
+    }
+  }, [data]);
 
   console.log(data);
 
@@ -78,17 +123,16 @@ function UpdateProduct({ hasEdit, productId }) {
     mutate,
     data: dataMutation,
     status: statusMutation,
-    isLoading: isLoadingMutate,
+    isPending: isPendingCreate,
     isSuccess,
     isError,
     error,
   } = useMutation({
-    mutationFn: newProduct, // Cambié la función a `mutationFn`
+    mutationFn: newProduct,
     onSuccess: () => {
       setIsLoading(false);
       setName("");
       setPrice(0.0);
-      setPriceMayor(0.0);
       setCountInStock(5);
       setToggle(false);
       setDescripcion(false);
@@ -99,9 +143,49 @@ function UpdateProduct({ hasEdit, productId }) {
       }
     },
     onError: (error) => {
-      // const errorMessage = "Error desconocido";
-      // toast.error(errorMessage);
       setIsLoading(false);
+      // puedes agregar un toast aquí si quieres notificar del error
+    },
+  });
+
+  // UPDATE PRODUCT REACT QUERY
+
+  const {
+    mutate: updateProduct, // así renombras la función `mutate` para más claridad
+    isPending: isPendingUpdate,
+    isError: isErrorUpdate,
+    isSuccess: isSuccesUpdate,
+    error: errorUpdate,
+    data: dataUpdate,
+  } = useMutation({
+    mutationFn: async () => {
+      const lowerCaseName = toLowerCase(name);
+      await handleUpdate(
+        productId,
+        lowerCaseName,
+        category,
+        price,
+        priceMayor,
+        status,
+        countInStock,
+        description,
+        toggle,
+        discountPercentage,
+        bestSellers,
+        file,
+        imageUrl,
+        queryClient,
+        inputFileRef,
+        setIsLoading,
+        setFile
+      );
+    },
+    onSuccess: () => {
+      toast.success("Producto Actualizado");
+    },
+    onError: () => {
+      setIsLoading(false);
+      toast.error("Error al actualizar producto");
     },
   });
 
@@ -114,13 +198,9 @@ function UpdateProduct({ hasEdit, productId }) {
 
   // Get ALl Categories
   const { data: dataCategories } = useQuery({
-    queryKey: ["AllCategories"], // Usamos queryKey en lugar de pasar el string directamente
-    queryFn: getAllCategories, // Usamos queryFn en lugar de pasar la función directamente
+    queryKey: ["AllCategories"],
+    queryFn: getAllCategories,
   });
-
-  const toLowerCase = (str) => {
-    return str.toLowerCase();
-  };
 
   //En esta funcion conviven dos funciones , handlesubmit que sube la imagen a cloudinary, y esta
   // mutate , que es la funcion que sube los datos a la tabla dynamo
@@ -142,7 +222,8 @@ function UpdateProduct({ hasEdit, productId }) {
       setIsLoading(false);
       return;
     }
-    const lowerCaseName = toLowerCase(name);
+    const lowerCase = toLowerCase(name);
+    console.log(lowerCase);
 
     try {
       const result = await handleSubmit(file);
@@ -151,9 +232,8 @@ function UpdateProduct({ hasEdit, productId }) {
 
       mutate(
         {
-          name: lowerCaseName,
+          name: lowerCase,
           price,
-          priceMayor,
           countInStock,
           categories: [category],
           description,
@@ -161,8 +241,8 @@ function UpdateProduct({ hasEdit, productId }) {
           discountPercentage,
           bestSellers,
           photo,
-          status,
         },
+
         {
           onError: (error) => {
             toast.error(error.errors[0].message);
@@ -233,39 +313,43 @@ function UpdateProduct({ hasEdit, productId }) {
     }
   }, [isError, photoArray, error]);
 
+  // const handleClickUpdate = async () => {
+  //   const lowerCaseName = toLowerCase(name);
+  //   console.log("📂 Archivos seleccionados:", file);
+
+  //   try {
+  //     await handleUpdate(
+  //       productId,
+  //       lowerCaseName,
+  //       category,
+  //       price,
+  //       priceMayor,
+  //       status,
+  //       countInStock,
+  //       description,
+  //       toggle,
+  //       discountPercentage,
+  //       bestSellers,
+  //       file,
+  //       imageUrl,
+  //       queryClient,
+  //       inputFileRef,
+  //       setIsLoading,
+  //       setFile
+  //     );
+
+  //     toast.success("Producto Actualizado");
+  //   } catch (error) {
+  //     setIsLoading(false);
+  //     toast.error("Error al actualizar producto");
+  //   }
+
+  //   // router.push("/productos");
+  // };
   const handleClickUpdate = async () => {
-    const lowerCaseName = toLowerCase(name);
-
-    try {
-      await handleUpdate(
-        status,
-        lowerCaseName,
-        price,
-        priceMayor,
-        countInStock,
-        category,
-        description,
-        toggle,
-        discountPercentage,
-        bestSellers,
-        file,
-        imageUrl,
-        productId,
-        queryClient,
-        inputFileRef,
-        setFile
-      );
-
-      toast.success("Producto Actualizado");
-    } catch (error) {
-      console.log("ettot", error.message);
-      setIsLoading(false);
-      toast.error(error.message);
-    }
-
-    // router.push("/productos");
+    // setIsLoading(true);
+    updateProduct();
   };
-
   const handleClickDeleteImage = async (id) => {
     const userConfirmed = window.confirm("¿Seguro de Eliminar esta Imagen?");
     if (userConfirmed) {
@@ -282,7 +366,7 @@ function UpdateProduct({ hasEdit, productId }) {
           bestSellers,
           queryClient
         );
-        toast.success("Producto Eliminado");
+        toast.warning("Producto Eliminado");
       } catch (error) {
         console.log(error);
         toast.error("Error al eliminar producto");
@@ -307,31 +391,6 @@ function UpdateProduct({ hasEdit, productId }) {
       >
         <div className="card  ">
           <div className="card-body">
-            <div className="mb-4">
-              <label
-                htmlFor="product_title"
-                className="block   text-sm font-bold mt-2 "
-              >
-                Status
-              </label>
-              <div className="  ">
-                <select
-                  value={status} // Vincular el valor del <select> directamente al estado
-                  className="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-1 focus:border-blue-500"
-                  onChange={(e) => setStatus(e.target.value)} // Actualizar el estado correctamente
-                >
-                  {/* Mostrar todas las opciones, incluyendo el valor actual */}
-                  <option value="" disabled>
-                    Selecciona
-                  </option>
-                  {statusList.map((item, index) => (
-                    <option key={index} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
             <div className="">
               <label
                 htmlFor="product_title"
@@ -345,10 +404,12 @@ function UpdateProduct({ hasEdit, productId }) {
                 className="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-1 focus:border-blue-500"
                 id="product_title"
                 required
-                value={nameCapital}
+                value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
+
+            {name === data?.name && "🔴"}
             <div className="mb-4">
               <label
                 htmlFor="product_title"
@@ -397,13 +458,13 @@ function UpdateProduct({ hasEdit, productId }) {
                 htmlFor="product_price"
                 className="block   text-sm font-bold mt-2"
               >
-                Precio al Mayor
+                Precio al mayor
               </label>
               <input
                 type="number"
                 placeholder="Type here"
                 className="border border-gray-300 p-2 rounded-md focus:outline-none  focus:ring-1 focus:border-blue-500"
-                id="product_price"
+                id="product_price_mayor"
                 required
                 value={priceMayor}
                 onChange={(e) => setPriceMayor(e.target.value)}
@@ -420,50 +481,24 @@ function UpdateProduct({ hasEdit, productId }) {
                 </label>
               </div>
               {toggle && (
-                <div className="flex gap-4">
-                  <div className="form-check"></div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="percentage"
-                      id="10%"
-                      value={10}
-                      defaultChecked={discountPercentage === 10}
-                      onChange={(e) => setDiscountPercentage(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="10%">
-                      10%
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="percentage"
-                      id="20%"
-                      value={20}
-                      defaultChecked={discountPercentage === 20}
-                      onChange={(e) => setDiscountPercentage(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="20%">
-                      20%
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="percentage"
-                      id="50%"
-                      value={50}
-                      defaultChecked={discountPercentage === 50}
-                      onChange={(e) => setDiscountPercentage(e.target.value)}
-                    />
-                    <label className="form-check-label" htmlFor="50%">
-                      50%
-                    </label>
-                  </div>
+                <div className="flex gap-4 items-center">
+                  <label htmlFor="discountInput" className="form-label">
+                    % de oferta:
+                  </label>
+                  <input
+                    id="discountInput"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="form-input border px-3 py-2 rounded-md w-24"
+                    value={discountPercentage === 0 ? "" : discountPercentage}
+                    onChange={(e) =>
+                      setDiscountPercentage(
+                        e.target.value === "" ? 0 : Number(e.target.value)
+                      )
+                    }
+                  />
                 </div>
               )}
             </div>
@@ -561,12 +596,18 @@ function UpdateProduct({ hasEdit, productId }) {
             </div>
 
             <button
-              disabled={isLoading}
+              disabled={isPendingCreate || isPendingUpdate}
               className="bg-slate-950 text-white px-5 py-2 rounded-md flex justify-center items-center"
               onClick={hasEdit ? handleClickUpdate : handleClickForm}
               style={{ minWidth: 100 }}
             >
-              {isLoading ? <Spinner /> : hasEdit ? "Update" : "Create"}
+              {isPendingCreate || isPendingUpdate ? (
+                <Spinner />
+              ) : hasEdit ? (
+                "Update"
+              ) : (
+                "Create"
+              )}
             </button>
           </div>
         </div>
