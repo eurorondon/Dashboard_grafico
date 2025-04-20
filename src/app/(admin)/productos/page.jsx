@@ -76,7 +76,7 @@ function Productos() {
             variables: {
               type: "Producto",
               sortDirection: "DESC",
-              limit: 10,
+              limit: 20,
               filter,
               nextToken: pageParam,
             },
@@ -92,6 +92,8 @@ function Productos() {
         return lastPage.nextToken || null;
       },
     });
+
+  console.log(data);
 
   const products =
     data?.pages.reduce(

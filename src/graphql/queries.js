@@ -241,9 +241,10 @@ export const getOrder = /* GraphQL */ `
       paidAt
       isDelivered
       deliveredAt
-      id
+      type
       createdAt
       updatedAt
+      id
       __typename
     }
   }
@@ -295,9 +296,10 @@ export const listOrders = /* GraphQL */ `
         paidAt
         isDelivered
         deliveredAt
-        id
+        type
         createdAt
         updatedAt
+        id
         __typename
       }
       nextToken
@@ -348,6 +350,75 @@ export const listSettings = /* GraphQL */ `
         }
         createdAt
         updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+
+export const OrdersByDate = /* GraphQL */ `
+  query OrdersByDate(
+    $type: String!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelOrderFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    OrdersByDate(
+      type: $type
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        idUserFilter
+        user {
+          id
+          name
+          email
+          phoneNumber
+          __typename
+        }
+        orderItems {
+          name
+          qty
+          image
+          price
+          id
+          __typename
+        }
+        shippingAddress {
+          address
+          city
+          postalCode
+          country
+          __typename
+        }
+        paymentMethod
+        paymentResult {
+          id
+          status
+          updateTime
+          emailAddress
+          __typename
+        }
+        paymentMethod
+        taxPrice
+        shippingPrice
+        totalPrice
+        isPaid
+        paidAt
+        isDelivered
+        deliveredAt
+        type
+        createdAt
+        updatedAt
+        id
         __typename
       }
       nextToken

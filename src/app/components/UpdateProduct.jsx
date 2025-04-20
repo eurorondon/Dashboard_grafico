@@ -52,9 +52,6 @@ function UpdateProduct({ hasEdit, productId }) {
 
   const queryClient = useQueryClient();
 
-  console.log("this is DESCRIPCION", descripcion);
-  console.log("this is description", description);
-
   // get product
   const { data, status } = useQuery({
     queryKey: ["GetProduct", productId],
@@ -133,6 +130,8 @@ function UpdateProduct({ hasEdit, productId }) {
       setIsLoading(false);
       setName("");
       setPrice(0.0);
+      setPriceMayor(0.0);
+      setCategory("");
       setCountInStock(5);
       setToggle(false);
       setDescripcion(false);
@@ -234,6 +233,7 @@ function UpdateProduct({ hasEdit, productId }) {
         {
           name: lowerCase,
           price,
+          priceMayor,
           countInStock,
           categories: [category],
           description,

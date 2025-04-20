@@ -38,7 +38,7 @@ const CreateCategory = ({ editID, setEditID }) => {
   const inputFileRef = React.useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showInCarousel, setshowInCarousel] = useState(false);
-  const [bgColor, setbgColor] = useState(null);
+  const [bgColor, setbgColor] = useState("#ffffff");
   const { data } = useQuery({
     queryKey: ["AllCategories"], // queryKey debe ser un arreglo
     queryFn: getAllCategories, // Especificamos la función de consulta en queryFn
@@ -201,7 +201,7 @@ const CreateCategory = ({ editID, setEditID }) => {
       setDescription("");
       setCategoryName("");
       setIsLoading(false);
-      setbgColor("");
+      // setbgColor("");
       toast.success("Categoría creada con éxito");
     } catch (error) {
       toast.error("Error al crear categoría");

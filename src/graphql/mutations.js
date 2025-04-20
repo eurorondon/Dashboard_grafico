@@ -282,9 +282,10 @@ export const createOrder = /* GraphQL */ `
       paidAt
       isDelivered
       deliveredAt
-      id
+      type
       createdAt
       updatedAt
+      id
       __typename
     }
   }
@@ -333,9 +334,10 @@ export const updateOrder = /* GraphQL */ `
       paidAt
       isDelivered
       deliveredAt
-      id
+      type
       createdAt
       updatedAt
+      id
       __typename
     }
   }
@@ -384,9 +386,10 @@ export const deleteOrder = /* GraphQL */ `
       paidAt
       isDelivered
       deliveredAt
-      id
+      type
       createdAt
       updatedAt
+      id
       __typename
     }
   }

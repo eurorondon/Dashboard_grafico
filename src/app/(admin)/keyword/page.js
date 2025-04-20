@@ -54,6 +54,8 @@ function Page() {
       enabled: false, // Disabled until search value changes
     });
 
+    console.log("data search", data);
+
     const { mutate } = useMutation({
       mutationFn: deleteProductFunction,
       onSuccess: () => {

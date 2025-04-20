@@ -11,6 +11,7 @@ import {
   listSettings,
   listOrders,
   getOrder,
+  OrdersByDate,
 } from "@/graphql/queries";
 import {
   createCategories,
@@ -189,12 +190,17 @@ export async function getAllSettings() {
 }
 
 export async function getAllOrders() {
-  const res = await client.graphql({
-    query: listOrders,
-    variables: {},
-  });
+  try {
+    const res = await client.graphql({
+      query: OrdersByDate,
+      variables: { type: "Order", sortDirection: "DESC" },
+    });
 
-  return res.data.listOrders.items;
+    return res.data.OrdersByDate.items;
+  } catch (error) {
+    console.error("Error al obtener las órdenes:", error);
+    return []; // o puedes lanzar el error si prefieres manejarlo fuera
+  }
 }
 
 export async function getOrderDetail(id) {
