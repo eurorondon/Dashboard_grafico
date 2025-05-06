@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button"; // Ajusta la ruta según tu proyecto
 import { useRouter } from "next/navigation";
+import { OrderActionsCell } from "./order-action-cell";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -82,18 +83,26 @@ export const columns = [
     id: "actions",
     header: "Detalles",
     cell: ({ row }) => {
-      const orderId = row.original.id; // o cualquier dato que necesites
-      const router = useRouter(); // Hook de enrutamiento
-
-      return (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/orders/${orderId}`)}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      );
+      return <OrderActionsCell orderId={row.original.id} />;
     },
   },
+
+  // {
+  //   id: "actions",
+  //   header: "Detalles",
+  //   cell: ({ row }) => {
+  //     const orderId = row.original.id; // o cualquier dato que necesites
+  //     const router = useRouter(); // Hook de enrutamiento
+
+  //     return (
+  //       <Button
+  //         variant="ghost"
+  //         size="icon"
+  //         onClick={() => router.push(`/orders/${orderId}`)}
+  //       >
+  //         <Eye className="h-4 w-4" />
+  //       </Button>
+  //     );
+  //   },
+  // },
 ];

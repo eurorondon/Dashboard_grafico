@@ -5,7 +5,7 @@ import React from "react";
 import { DataTable } from "./_components/data-table";
 import { columns } from "../_components/columns";
 
-const page = () => {
+const Page = () => {
   const {
     data: dataOrders,
     isLoading: isLoadingOrders,
