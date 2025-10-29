@@ -20,9 +20,13 @@ import { ToastContainer, toast } from "react-toastify";
 import { Spinner } from "flowbite-react";
 
 export const capitalizeFirstLetter = (str) => {
+  if (typeof str !== "string") {
+    console.warn("[UpdateProduct] capitalizeFirstLetter recibió un valor no válido", str);
+    return "";
+  }
   if (str.length === 0) return str;
   const res = str.charAt(0).toUpperCase() + str.slice(1);
-  console.log(res);
+  console.log("[UpdateProduct] capitalizeFirstLetter result", res);
   return res;
 };
 
@@ -45,75 +49,104 @@ function UpdateProduct({ hasEdit, productId }) {
   const [bestSellers, setBestSellers] = useState(false);
   const [description, setDescription] = useState("");
   const [descripcion, setDescripcion] = useState(false);
-  const inputFileRef = React.useRef(null);
+  const inputFileRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [photoArray, setPhotoArray] = useState(null);
   const [Status, setStatus] = useState(null);
 
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    console.log("[UpdateProduct] Props received", { hasEdit, productId });
+  }, [hasEdit, productId]);
+
+  const populateProductFields = React.useCallback(
+    (productData) => {
+      if (!productData) {
+        console.warn("[UpdateProduct] populateProductFields sin datos", productData);
+        return;
+      }
+
+      console.log("[UpdateProduct] Populating form with product data", {
+        productId,
+        hasEdit,
+        productName: productData?.name,
+      });
+
+      const normalizedName = capitalizeFirstLetter(productData?.name ?? "");
+      setName(normalizedName);
+
+      const firstCategory =
+        Array.isArray(productData?.categories) && productData.categories.length > 0
+          ? productData.categories[0]
+          : "";
+      setCategory(firstCategory);
+
+      const parsedPrice =
+        typeof productData?.price === "number"
+          ? productData.price
+          : Number(productData?.price ?? 0);
+      setPrice(Number.isFinite(parsedPrice) ? parsedPrice : 0);
+
+      const parsedPriceMayor =
+        typeof productData?.priceMayor === "number"
+          ? productData.priceMayor
+          : Number(productData?.priceMayor ?? 0);
+      setPriceMayor(Number.isFinite(parsedPriceMayor) ? parsedPriceMayor : 0);
+
+      setDescription(productData?.description ?? "");
+
+      const photosInicio = Array.isArray(productData?.photo)
+        ? productData.photo
+            .filter((item) => item && item.url)
+            .map((item) => ({
+              url: item.url,
+              publicId: item.publicId,
+            }))
+        : [];
+
+      setImageUrl(photosInicio);
+      setPublicIdCloudinary(productData?.photo?.[0]?.publicId || "");
+
+      const parsedCountInStock =
+        typeof productData?.countInStock === "number"
+          ? productData.countInStock
+          : Number(productData?.countInStock ?? 0);
+      setCountInStock(Number.isFinite(parsedCountInStock) ? parsedCountInStock : 0);
+
+      setToggle(!!productData?.inOffer);
+      setDiscountPercentage(productData?.discountPercentage ?? 0);
+      setBestSellers(!!productData?.bestSellers);
+      setStatus(productData?.status ?? null);
+      setDescripcion(!!productData?.description);
+    },
+    [hasEdit, productId]
+  );
+
   // get product
-  const { data, status } = useQuery({
+  const { data, status, error: productError } = useQuery({
     queryKey: ["GetProduct", productId],
     queryFn: () => productDetails(productId),
-    enabled: !!productId,
-    onSuccess: (data) => {
-      setName(capitalizeFirstLetter(data.name));
-      setCategory(
-        Array.isArray(data.categories) && data.categories.length > 0
-          ? data.categories[0]
-          : ""
-      );
-      setPrice(data.price);
-      setDescription(data.description);
-
-      const photosInicio = (data.photo || []).map((item) => ({
-        url: item.url,
-        publicId: item.publicId,
-      }));
-      setImageUrl(photosInicio);
-      setPublicIdCloudinary(data?.photo?.[0]?.publicId || "");
-      setCountInStock(data.countInStock);
-      setToggle(!!data.inOffer);
-      setDiscountPercentage(data.discountPercentage);
-      setBestSellers(data.bestSellers);
-      setStatus(data.status);
+    enabled: Boolean(hasEdit && productId),
+    onSuccess: (productData) => {
+      console.log("[UpdateProduct] Query success", { productId, hasEdit });
+      populateProductFields(productData);
+    },
+    onError: (fetchError) => {
+      console.error("[UpdateProduct] Query error", { productId, error: fetchError });
     },
   });
 
   useEffect(() => {
-    if (!data) return;
-
-    setName(capitalizeFirstLetter(data.name));
-    setCategory(
-      Array.isArray(data.categories) && data.categories.length > 0
-        ? data.categories[0]
-        : ""
-    );
-    setPrice(data.price);
-    setPriceMayor(data.priceMayor);
-    setDescription(data.description);
-
-    const photosInicio = (data.photo || []).map((item) => ({
-      url: item.url,
-      publicId: item.publicId,
-    }));
-    setImageUrl(photosInicio);
-    setPublicIdCloudinary(data?.photo?.[0]?.publicId || "");
-    setCountInStock(data.countInStock);
-    setToggle(!!data.inOffer);
-    setDiscountPercentage(data.discountPercentage);
-    setBestSellers(data.bestSellers);
-    setStatus(data.status);
-  }, [data]);
+    if (data) {
+      console.log("[UpdateProduct] Query data changed", { productId, hasEdit });
+      populateProductFields(data);
+    }
+  }, [data, hasEdit, populateProductFields, productId]);
 
   useEffect(() => {
-    if (data?.description) {
-      setDescripcion(true);
-    }
-  }, [data]);
-
-  console.log(data);
+    console.log("[UpdateProduct] Query status updated", { status, productError });
+  }, [status, productError]);
 
   // New Product React Query
   const {
@@ -347,6 +380,20 @@ function UpdateProduct({ hasEdit, productId }) {
   //   // router.push("/productos");
   // };
   const handleClickUpdate = async () => {
+    console.log("[UpdateProduct] Triggering update", {
+      productId,
+      name,
+      category,
+      price,
+      priceMayor,
+      status,
+      countInStock,
+      description,
+      toggle,
+      discountPercentage,
+      bestSellers,
+      imageUrlLength: Array.isArray(imageUrl) ? imageUrl.length : 0,
+    });
     // setIsLoading(true);
     updateProduct();
   };
@@ -382,6 +429,43 @@ function UpdateProduct({ hasEdit, productId }) {
   //     setIsLoading(false);
   //   }
   // }, [isSuccess, isError]);
+
+  if (hasEdit && status === "pending") {
+    return (
+      <div
+        className="bg-white p-5 border shadow-lg flex items-center justify-center"
+        style={{ minHeight: "90vh" }}
+      >
+        <Spinner aria-label="Cargando producto" size="xl" />
+      </div>
+    );
+  }
+
+  if (hasEdit && status === "error") {
+    return (
+      <div
+        className="bg-white p-5 border shadow-lg flex items-center justify-center"
+        style={{ minHeight: "90vh" }}
+      >
+        <p className="text-red-600 font-semibold text-center">
+          No se pudo cargar la información del producto. Intenta nuevamente.
+        </p>
+      </div>
+    );
+  }
+
+  if (hasEdit && status === "success" && !data) {
+    return (
+      <div
+        className="bg-white p-5 border shadow-lg flex items-center justify-center"
+        style={{ minHeight: "90vh" }}
+      >
+        <p className="text-gray-600 font-semibold text-center">
+          No encontramos información para este producto.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="   ">
