@@ -1,7 +1,8 @@
 import UpdateProduct from "@/app/components/UpdateProduct";
 
-function Edit({ params }) {
-  const idParam = params?.id;
+async function Edit({ params }) {
+  const resolvedParams = await params;
+  const idParam = resolvedParams?.id;
   const productId = Array.isArray(idParam) ? idParam[0] : idParam;
 
   if (!productId) {
