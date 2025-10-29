@@ -82,13 +82,29 @@ export async function ListProductsByDate() {
 }
 
 export async function productDetails(id) {
-  const res = await client.graphql({
-    query: getProduct,
-    variables: {
+  if (!id) {
+    console.warn("[graphqlFunctions] productDetails llamado sin id");
+    return null;
+  }
+
+  try {
+    console.log("[graphqlFunctions] Fetching product details", { id });
+    const res = await client.graphql({
+      query: getProduct,
+      variables: {
+        id,
+      },
+    });
+    const product = res?.data?.getProduct ?? null;
+    console.log("[graphqlFunctions] Product details response", {
       id,
-    },
-  });
-  return res.data.getProduct;
+      hasProduct: !!product,
+    });
+    return product;
+  } catch (error) {
+    console.error("[graphqlFunctions] Error fetching product details", { id, error });
+    throw error;
+  }
 }
 
 export async function deleteProductFunction(id) {
