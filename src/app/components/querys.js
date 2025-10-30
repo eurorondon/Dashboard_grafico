@@ -157,7 +157,8 @@ export const handleDeleteImage = async (
   toggle,
   discountPercentage,
   bestSellers,
-  queryClient
+  queryClient,
+  setImageUrl
 ) => {
   try {
     const response = await fetch(`/api/delete`, {
@@ -172,7 +173,11 @@ export const handleDeleteImage = async (
     console.error("Error de red al eliminar la imagen desde page", error);
   }
 
-  const filtrando = imageUrl.filter((item) => item.publicId !== id);
+  const currentImages = Array.isArray(imageUrl)
+    ? imageUrl.filter((item) => item)
+    : [];
+
+  const filtrando = currentImages.filter((item) => item.publicId !== id);
   console.log("el id para filtrar = ", id);
   console.log("filtrando", filtrando);
 
@@ -199,6 +204,7 @@ export const handleDeleteImage = async (
 
     console.log(result);
     queryClient.invalidateQueries(["GetProduct"]);
+    setImageUrl(filtrando);
   } catch (error) {
     console.log(error);
   }

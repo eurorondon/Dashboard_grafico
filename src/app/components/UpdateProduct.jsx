@@ -38,7 +38,7 @@ function UpdateProduct({ hasEdit, productId }) {
   const [category, setCategory] = useState("");
   const [countInStock, setCountInStock] = useState(5);
   const [file, setFile] = useState([]);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState([]);
   const [publicIdCloudinary, setPublicIdCloudinary] = useState(null);
   const [toggle, setToggle] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState(0);
@@ -67,10 +67,14 @@ function UpdateProduct({ hasEdit, productId }) {
       setPrice(data.price);
       setDescription(data.description);
 
-      const photosInicio = (data.photo || []).map((item) => ({
-        url: item.url,
-        publicId: item.publicId,
-      }));
+      const photosInicio = Array.isArray(data.photo)
+        ? data.photo
+            .filter((item) => item && (item.url || item.publicId))
+            .map((item) => ({
+              url: item.url,
+              publicId: item.publicId,
+            }))
+        : [];
       setImageUrl(photosInicio);
       setPublicIdCloudinary(data?.photo?.[0]?.publicId || "");
       setCountInStock(data.countInStock);
@@ -94,10 +98,14 @@ function UpdateProduct({ hasEdit, productId }) {
     setPriceMayor(data.priceMayor);
     setDescription(data.description);
 
-    const photosInicio = (data.photo || []).map((item) => ({
-      url: item.url,
-      publicId: item.publicId,
-    }));
+    const photosInicio = Array.isArray(data.photo)
+      ? data.photo
+          .filter((item) => item && (item.url || item.publicId))
+          .map((item) => ({
+            url: item.url,
+            publicId: item.publicId,
+          }))
+      : [];
     setImageUrl(photosInicio);
     setPublicIdCloudinary(data?.photo?.[0]?.publicId || "");
     setCountInStock(data.countInStock);
@@ -351,6 +359,11 @@ function UpdateProduct({ hasEdit, productId }) {
     updateProduct();
   };
   const handleClickDeleteImage = async (id) => {
+    if (!id) {
+      toast.error("No se pudo identificar la imagen a eliminar");
+      return;
+    }
+
     const userConfirmed = window.confirm("¿Seguro de Eliminar esta Imagen?");
     if (userConfirmed) {
       try {
@@ -364,7 +377,8 @@ function UpdateProduct({ hasEdit, productId }) {
           toggle,
           discountPercentage,
           bestSellers,
-          queryClient
+          queryClient,
+          setImageUrl
         );
         toast.warning("Producto Eliminado");
       } catch (error) {
@@ -382,6 +396,9 @@ function UpdateProduct({ hasEdit, productId }) {
   //     setIsLoading(false);
   //   }
   // }, [isSuccess, isError]);
+
+  const FALLBACK_IMAGE_URL =
+    "https://img.freepik.com/vector-premium/vector-icono-imagen-predeterminado-pagina-imagen-faltante-diseno-sitio-web-o-aplicacion-movil-no-hay-foto-disponible_87543-11093.jpg";
 
   return (
     <div className="   ">
@@ -556,30 +573,34 @@ function UpdateProduct({ hasEdit, productId }) {
             )}
 
             <div className="flex">
-              {imageUrl &&
-                imageUrl.map((item) => (
-                  <div
-                    className="relative"
-                    key={item?.publicId}
-                    onClick={() => console.log(item?.publicId)}
-                  >
-                    <div className="bg-red-600 absolute right-2  font-extrabold text-white z-10 rounded-full w-5 h-5 flex justify-center items-center">
-                      <button
-                        className=" "
-                        onClick={() => handleClickDeleteImage(item?.publicId)}
-                      >
-                        X
-                      </button>
-                    </div>
+              {Array.isArray(imageUrl) &&
+                imageUrl.map((item) => {
+                  const imageSrc = item?.url || FALLBACK_IMAGE_URL;
+                  const key = item?.publicId || imageSrc;
 
-                    <Image
-                      src={item.url}
-                      width={150}
-                      height={150}
-                      alt="Imagen"
-                    />
-                  </div>
-                ))}
+                  return (
+                    <div className="relative" key={key}>
+                      {item?.publicId && (
+                        <div className="bg-red-600 absolute right-2  font-extrabold text-white z-10 rounded-full w-5 h-5 flex justify-center items-center">
+                          <button
+                            className=" "
+                            onClick={() => handleClickDeleteImage(item.publicId)}
+                          >
+                            X
+                          </button>
+                        </div>
+                      )}
+
+                      <Image
+                        src={imageSrc}
+                        width={150}
+                        height={150}
+                        alt="Imagen"
+                        unoptimized={!item?.url}
+                      />
+                    </div>
+                  );
+                })}
             </div>
 
             <div className="mb-4">
