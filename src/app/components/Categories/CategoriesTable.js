@@ -26,7 +26,7 @@ const CategoriesTable = ({ setEditID }) => {
     mutationFn: deleteCategory, // Especificamos la función de mutación en mutationFn
     onSuccess: () => {
       queryClient.invalidateQueries(["AllCategories"]); // Especificamos queryKey como un arreglo
-      toast.warn("Categoria eliminada");
+      toast.success("Categoria eliminada");
     },
   });
 
