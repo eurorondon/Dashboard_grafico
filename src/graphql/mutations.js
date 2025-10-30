@@ -17,12 +17,16 @@ export const createProduct = /* GraphQL */ `
       color
       description
       reviews {
-        name
-        rating
-        comment
-        user
-        createdAt
-        updatedAt
+        items {
+          name
+          rating
+          comment
+          user
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
         __typename
       }
       rating
@@ -58,12 +62,16 @@ export const updateProduct = /* GraphQL */ `
       color
       description
       reviews {
-        name
-        rating
-        comment
-        user
-        createdAt
-        updatedAt
+        items {
+          name
+          rating
+          comment
+          user
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
         __typename
       }
       rating
@@ -99,12 +107,16 @@ export const deleteProduct = /* GraphQL */ `
       color
       description
       reviews {
-        name
-        rating
-        comment
-        user
-        createdAt
-        updatedAt
+        items {
+          name
+          rating
+          comment
+          user
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
         __typename
       }
       rating
