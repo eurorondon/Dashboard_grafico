@@ -14,13 +14,15 @@ export const getProduct = /* GraphQL */ `
       color
       description
       reviews {
-        name
-        rating
-        comment
-        user
-        createdAt
-        updatedAt
-        __typename
+        items {
+          name
+          rating
+          comment
+          user
+          createdAt
+          updatedAt
+          __typename
+        }
       }
       rating
       numReviews
